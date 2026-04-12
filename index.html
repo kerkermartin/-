@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>內惟單字王：單字全量校正版</title>
+    <style>
+        :root { --p: #6c5ce7; --s: #a29bfe; --acc: #00b894; --dmg: #ff7675; --dark: #0f0c29; --gold: #f1c40f; }
+        body { margin: 0; background: #0f0c29; color: white; font-family: 'Microsoft JhengHei', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        #game-container { width: 95%; max-width: 800px; background: rgba(0, 0, 0, 0.95); border: 3px solid var(--p); border-radius: 20px; padding: 25px; box-shadow: 0 0 50px var(--p); text-align: center; }
+        .hidden { display: none !important; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .home-link { background: rgba(255,255,255,0.1); border: 1px solid #555; color: #aaa; padding: 6px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .home-link:hover { background: #d63031; color: white; }
+        .user-tag { color: var(--gold); font-weight: bold; }
+        input[type="text"] { background: rgba(255,255,255,0.1); border: 2px solid var(--s); border-radius: 10px; color: white; padding: 12px; font-size: 1.2rem; text-align: center; width: 80%; outline: none; }
+        .menu-grid { display: grid; gap: 10px; margin-top: 15px; }
+        button { background: rgba(255,255,255,0.1); border: 2px solid var(--s); color: white; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        button:hover { background: var(--p); transform: translateY(-2px); }
+        .rank-container { margin-top: 25px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid #444; }
+        .rank-tabs { display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; }
+        .tab-btn { flex: 1; font-size: 0.75rem; padding: 8px 2px; white-space: nowrap; border: 1px solid #555; }
+        .tab-btn.active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
+        .rank-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
+        .rank-table th { color: #888; border-bottom: 2px solid #444; padding: 8px; }
+        .rank-table td { padding: 8px; border-bottom: 1px solid #222; }
+        #display-box { min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 15px 0; border: 1px dashed #555; border-radius: 15px; background: rgba(255,255,255,0.03); }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-item { background: #2d3436; border: 2px solid #636e72; padding: 18px; border-radius: 12px; cursor: pointer; }
+        .option-item.selected { border-color: #fff; background: var(--p); }
+        .option-item.correct { background: var(--acc) !important; color: #000; font-weight: bold; }
+        .option-item.wrong { background: var(--dmg) !important; }
+        #spell-input { width: 85%; font-size: 2rem; border: none; border-bottom: 3px solid var(--s); margin-bottom: 20px; color: white; background: transparent; text-align: center; }
+        .status-ok { color: var(--acc); font-weight: bold; }
+        .status-no { color: var(--dmg); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="login-page">
+        <h1 style="color:var(--gold)">🏆 內惟單字王 🏆</h1>
+        <input type="text" id="username-input" placeholder="請輸入姓名..." maxlength="10">
+        <div class="menu-grid">
+            <button onclick="handleLogin()" style="background:var(--acc); color:black; font-weight:bold;">進入測驗</button>
+        </div>
+        <div class="rank-container">
+            <div class="rank-tabs">
+                <button class="tab-btn active" onclick="updateRankUI('choice', event)">選擇題榜</button>
+                <button class="tab-btn" onclick="updateRankUI('listen-choice', event)">聽力選擇榜</button>
+                <button class="tab-btn" onclick="updateRankUI('spell', event)">拼字榜</button>
+                <button class="tab-btn" onclick="updateRankUI('dictation', event)">聽音拼字榜</button>
+            </div>
+            <table class="rank-table">
+                <thead><tr><th>名次</th><th>玩家</th><th>得分</th><th>秒數</th></tr></thead>
+                <tbody id="rank-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="main-menu" class="hidden">
+        <div class="top-nav"><div class="user-tag">👤 <span id="display-user"></span></div><div class="home-link" onclick="location.reload()">登出</div></div>
+        <h1>選擇挑戰項目</h1>
+        <div class="menu-grid">
+            <button onclick="showSubMenu('choice')">📜 選擇題 (中英對照)</button>
+            <button onclick="showSubMenu('listen-choice')">🎧 聽力選擇 (聽音選中)</button>
+            <button onclick="showSubMenu('spell')">✏️ 拼字挑戰 (看中拼英)</button>
+            <button style="background:#e67e22" onclick="showSubMenu('dictation')">🎤 聽力拼字</button>
+        </div>
+    </div>
+
+    <div id="sub-menu" class="hidden">
+        <div class="top-nav"><div class="home-link" onclick="goBackMenu()">⬅ 返回</div><div class="user-tag">範圍選擇</div></div>
+        <div id="sub-buttons" class="menu-grid"></div>
+        <div id="letter-zone" class="hidden">
+            <hr style="border:0.5px solid #333; margin:20px 0;">
+            <div id="letter-buttons" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap:5px;"></div>
+        </div>
+    </div>
+
+    <div id="game-play" class="hidden">
+        <div class="top-nav"><div class="home-link" onclick="location.reload()">🏠 終止</div><div id="q-info" class="user-tag"></div></div>
+        <div id="display-box">
+            <div id="q-content" style="font-size: 2rem; font-weight: bold;"></div>
+            <div id="hint-text" style="color:var(--gold); margin-top:8px; letter-spacing:2px;"></div>
+        </div>
+        <div id="choice-area" class="options-grid hidden"></div>
+        <div id="spell-area" class="hidden"><input type="text" id="spell-input" autocomplete="off"></div>
+        <div id="feedback" style="height:1.5rem; margin:15px 0;"></div>
+        <button id="submit-btn" onclick="processSubmit()" style="background:var(--acc); color:black; width:100%; border:none; padding:15px; border-radius:12px; font-weight:bold;">確認送出</button>
+        <button id="next-btn" onclick="goNext()" class="hidden" style="background:var(--p); width:100%; border:none; padding:15px; border-radius:12px;">下一題</button>
+    </div>
+
+    <div id="result-report" class="hidden">
+        <h2 id="res-score" style="color:var(--gold)"></h2>
+        <div style="max-height: 350px; overflow-y: auto; border: 1px solid #444; border-radius: 10px;">
+            <table class="rank-table" style="text-align: left;">
+                <tbody id="report-body"></tbody>
+            </table>
+        </div>
+        <button onclick="location.reload()" style="margin-top:20px; width:100%; background:var(--p); border:none; padding:15px; border-radius:12px;">回首頁</button>
+    </div>
+</div>
+
+<script>
+    // 完整的 284 個單字清單 (確保 L 有 15 個)
+    const allWords = [
+        {en:"after",zh:"之後"},{en:"airport",zh:"機場"},{en:"April",zh:"四月"},{en:"across",zh:"跨越"},{en:"alone",zh:"單獨"},{en:"arrive",zh:"抵達"},{en:"ago",zh:"之前"},{en:"already",zh:"已經"},{en:"artist",zh:"藝術家"},{en:"actor",zh:"演員"},{en:"amazing",zh:"驚人的"},{en:"astronaut",zh:"太空人"},{en:"actually",zh:"其實"},{en:"ambulance",zh:"救護車"},{en:"August",zh:"八月"},{en:"agree",zh:"同意"},{en:"anyone",zh:"任何人"},{en:"autumn",zh:"秋天"},{en:"adventure",zh:"冒險"},{en:"anywhere",zh:"任何地方"},{en:"away",zh:"遠離"},{en:"appear",zh:"出現"},{en:"as",zh:"如同"},
+        {en:"backpack",zh:"背包"},{en:"belt",zh:"皮帶"},{en:"bridge",zh:"橋"},{en:"bandage",zh:"繃帶"},{en:"bored",zh:"無聊的"},{en:"broken",zh:"破損"},{en:"bank",zh:"銀行"},{en:"bicycle",zh:"腳踏車"},{en:"brush",zh:"刷子"},{en:"before",zh:"之前"},{en:"borrow",zh:"借入"},{en:"business",zh:"商業"},{en:"begin",zh:"開始"},{en:"biscuit",zh:"餅乾"},{en:"butterfly",zh:"蝴蝶"},{en:"believe",zh:"相信"},{en:"bracelet",zh:"手鍊"},{en:"break",zh:"打破"},
+        {en:"calendar",zh:"日曆"},{en:"channel",zh:"頻道"},{en:"club",zh:"社團"},{en:"camp",zh:"露營"},{en:"chat",zh:"聊天"},{en:"collect",zh:"收集"},{en:"cartoon",zh:"卡通"},{en:"cheap",zh:"便宜"},{en:"competition",zh:"比賽"},{en:"castle",zh:"城堡"},{en:"chemist",zh:"化學家"},{en:"concert",zh:"演唱會"},{en:"cave",zh:"洞穴"},{en:"chess",zh:"西洋棋"},{en:"conversation",zh:"會話"},{en:"century",zh:"世紀"},{en:"chopsticks",zh:"筷子"},{en:"corner",zh:"角落"},{en:"costume",zh:"服裝"},{en:"creature",zh:"生物"},{en:"crown",zh:"皇冠"},
+        {en:"dark",zh:"黑暗"},{en:"deep",zh:"深"},{en:"diary",zh:"日記"},{en:"date",zh:"日期"},{en:"delicious",zh:"美味的"},{en:"dictionary",zh:"字典"},{en:"December",zh:"十二月"},{en:"desert",zh:"沙漠"},{en:"dinosaur",zh:"恐龍"},{en:"decide",zh:"決定"},{en:"design",zh:"設計"},{en:"drum",zh:"鼓"},
+        {en:"each",zh:"每個"},{en:"else",zh:"其他"},{en:"enough",zh:"足夠"},{en:"early",zh:"早的"},{en:"empty",zh:"空的"},{en:"environment",zh:"環境"},{en:"earth",zh:"地球"},{en:"end",zh:"結束"},{en:"excellent",zh:"傑出的"},{en:"east",zh:"東方"},{en:"engine",zh:"引擎"},{en:"expensive",zh:"昂貴的"},
+        {en:"factory",zh:"工廠"},{en:"fill",zh:"填充"},{en:"flashlight",zh:"手電筒"},{en:"fall",zh:"落下"},{en:"finally",zh:"最後"},{en:"floor",zh:"地板"},{en:"famous",zh:"著名的"},{en:"finish",zh:"完成"},{en:"foreign",zh:"外國的"},{en:"February",zh:"二月"},{en:"fireman",zh:"消防員"},{en:"frightened",zh:"受驚的"},{en:"feel",zh:"感覺"},{en:"flag",zh:"旗子"},{en:"future",zh:"未來"},
+        {en:"gate",zh:"大門"},{en:"gold",zh:"黃金"},{en:"grow",zh:"成長"},{en:"geography",zh:"地理"},{en:"golf",zh:"高爾夫"},{en:"guess",zh:"猜測"},{en:"get",zh:"得到"},{en:"group",zh:"團體"},{en:"guitar",zh:"吉他"},
+        {en:"happen",zh:"發生"},{en:"history",zh:"歷史"},{en:"hotel",zh:"飯店"},{en:"heavy",zh:"重的"},{en:"holiday",zh:"假期"},{en:"husband",zh:"丈夫"},{en:"high",zh:"高的"},{en:"hope",zh:"希望"},{en:"hurry",zh:"趕快"},
+        {en:"ice-cream",zh:"冰淇淋"},{en:"important",zh:"重要的"},{en:"instead",zh:"代替"},{en:"ill",zh:"生病的"},{en:"improve",zh:"改善"},{en:"instrument",zh:"樂器"},{en:"imagine",zh:"想像"},{en:"information",zh:"資訊"},{en:"island",zh:"島嶼"},
+        {en:"January",zh:"一月"},{en:"journey",zh:"旅程"},{en:"July",zh:"七月"},{en:"job",zh:"工作"},{en:"judge",zh:"裁判"},{en:"June",zh:"六月"},{en:"join",zh:"加入"},{en:"jujitsu",zh:"柔術"},{en:"journalist",zh:"記者"},
+        {en:"keep",zh:"保持"},{en:"key",zh:"鑰匙"},{en:"kind",zh:"種類"},{en:"knife",zh:"刀子"},
+        {en:"language",zh:"語言"},{en:"letter",zh:"信"},{en:"low",zh:"低"},{en:"lazy",zh:"懶惰的"},{en:"lie",zh:"說謊"},{en:"lucky",zh:"幸運的"},{en:"later",zh:"較晚"},{en:"laugh",zh:"笑"},{en:"leaf",zh:"葉子"},{en:"learn",zh:"學習"},{en:"leave",zh:"離開"},{en:"left",zh:"左邊"},{en:"lesson",zh:"課程"},{en:"light",zh:"光"},{en:"little",zh:"小的"},
+        {en:"magazine",zh:"雜誌"},{en:"meal",zh:"餐"},{en:"million",zh:"百萬"},{en:"manager",zh:"主管"},{en:"medicine",zh:"藥"},{en:"mind",zh:"在意"},{en:"March",zh:"三月"},{en:"meeting",zh:"會議"},{en:"minute",zh:"分鐘"},{en:"married",zh:"已婚的"},{en:"member",zh:"會員"},{en:"missing",zh:"想念的"},{en:"math",zh:"數學"},{en:"metal",zh:"金屬"},{en:"month",zh:"月份"},{en:"May",zh:"五月"},{en:"middle",zh:"中間的"},{en:"museum",zh:"博物館"},
+        {en:"necklace",zh:"項鍊"},{en:"next",zh:"下一個"},{en:"north",zh:"北方"},{en:"newspaper",zh:"報紙"},{en:"noisy",zh:"吵鬧的"},{en:"November",zh:"十一月"},
+        {en:"ocean",zh:"海洋"},{en:"office",zh:"辦公室"},{en:"other",zh:"其他的"},{en:"October",zh:"十月"},{en:"once",zh:"一次"},{en:"oven",zh:"烤箱"},{en:"of course",zh:"當然"},{en:"online",zh:"線上"},{en:"over",zh:"過度"},
+        {en:"passenger",zh:"旅客"},{en:"pilot",zh:"機長"},{en:"prepare",zh:"準備"},{en:"past",zh:"過去"},{en:"planet",zh:"行星"},{en:"prize",zh:"獎賞"},{en:"path",zh:"路徑"},{en:"platform",zh:"平台"},{en:"problem",zh:"問題"},{en:"pepper",zh:"胡椒"},{en:"pocket",zh:"口袋"},{en:"project",zh:"計畫"},{en:"perhaps",zh:"也許"},{en:"poor",zh:"窮的"},{en:"puzzle",zh:"難題"},{en:"piece",zh:"一片"},{en:"popular",zh:"受歡迎的"},{en:"pyramid",zh:"金字塔"},
+        {en:"quarter",zh:"四分之一"},{en:"quite",zh:"相當"},{en:"quiz",zh:"測驗"},
+        {en:"race",zh:"比賽"},{en:"remember",zh:"記得"},{en:"restaurant",zh:"餐廳"},{en:"railway",zh:"鐵路"},{en:"repair",zh:"修理"},{en:"right",zh:"右邊"},{en:"ready",zh:"準備好"},{en:"repeat",zh:"重複"},{en:"rocket",zh:"火箭"},
+        {en:"salt",zh:"鹽巴"},{en:"singer",zh:"歌手"},{en:"spend",zh:"花費"},{en:"save",zh:"保存"},{en:"skyscraper",zh:"摩天大樓"},{en:"spot",zh:"地點"},{en:"score",zh:"分數"},{en:"slowly",zh:"緩慢地"},{en:"stamp",zh:"郵票"},{en:"September",zh:"九月"},{en:"snowboard",zh:"滑雪板"},{en:"station",zh:"車站"},{en:"several",zh:"幾個"},{en:"soft",zh:"軟的"},{en:"stay",zh:"停留"},{en:"shampoo",zh:"洗髮精"},{en:"somewhere",zh:"某處"},{en:"strange",zh:"奇怪的"},{en:"shelf",zh:"架子"},{en:"soon",zh:"很快"},{en:"strawberry",zh:"草莓"},{en:"shoulder",zh:"肩膀"},{en:"south",zh:"南方"},{en:"subject",zh:"科目"},{en:"silver",zh:"銀"},{en:"space",zh:"空間"},{en:"sugar",zh:"糖"},{en:"since",zh:"自從"},{en:"speak",zh:"說話"},{en:"sure",zh:"確定"},
+        {en:"team",zh:"隊伍"},{en:"through",zh:"穿過"},{en:"tomorrow",zh:"明天"},{en:"terrible",zh:"可怕的"},{en:"tidy",zh:"整潔的"},{en:"tonight",zh:"今晚"},{en:"theater",zh:"劇院"},{en:"time",zh:"時間"},{en:"traffic",zh:"交通"},{en:"thirsty",zh:"渴的"},{en:"title",zh:"標題"},{en:"travel",zh:"旅行"},{en:"thousand",zh:"千"},{en:"together",zh:"一起"},{en:"trouble",zh:"麻煩"},
+        {en:"umbrella",zh:"雨傘"},{en:"understand",zh:"理解"},{en:"usually",zh:"通常"},{en:"uncle",zh:"叔叔"},{en:"university",zh:"大學"},{en:"until",zh:"直到"},
+        {en:"valley",zh:"山谷"},{en:"view",zh:"視野"},{en:"visit",zh:"參觀"},
+        {en:"wait",zh:"等待"},{en:"wheel",zh:"輪子"},{en:"wonderful",zh:"美妙的"},{en:"way",zh:"方法"},{en:"whisper",zh:"耳語"},{en:"wood",zh:"木頭"},{en:"west",zh:"西方"},{en:"whistle",zh:"口哨"},{en:"world",zh:"世界"},{en:"wet",zh:"濕的"},{en:"wife",zh:"妻子"},{en:"worse",zh:"更糟的"},
+        {en:"year",zh:"年份"},{en:"yet",zh:"尚未"},{en:"young",zh:"年輕的"}
+    ];
+
+    let state = { name:"", mode:"", sub:"", quiz:[], cur:0, res:[], start:0 };
+
+    function handleLogin() {
+        const val = document.getElementById('username-input').value.trim();
+        if(!val) return alert("請輸入名字");
+        state.name = val;
+        document.getElementById('display-user').innerText = val;
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('main-menu').classList.remove('hidden');
+    }
+
+    function showSubMenu(m) {
+        state.mode = m;
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('sub-menu').classList.remove('hidden');
+        const btns = document.getElementById('sub-buttons');
+        const lZone = document.getElementById('letter-zone');
+        btns.innerHTML = ''; lZone.classList.add('hidden');
+        
+        if(m==='choice') btns.innerHTML = `<button onclick="setup('en-zh')">英選中</button><button onclick="setup('zh-en')">中選英</button>`;
+        else if(m==='listen-choice') btns.innerHTML = `<button onclick="setup('listen-zh')">聽音選中</button>`;
+        else if(m==='spell' || m==='dictation') {
+            btns.innerHTML = `
+                <button onclick="setup('dict-AM')">大區 A~M (上限15題)</button>
+                <button onclick="setup('dict-NZ')">大區 N~Z (上限15題)</button>
+                <button style="background:#8e44ad" onclick="setup('dict-AZ')">全區 A~Z (上限15題)</button>
+            `;
+            lZone.classList.remove('hidden');
+            const lBtns = document.getElementById('letter-buttons'); lBtns.innerHTML = '';
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(l => {
+                const b = document.createElement('button'); b.innerText = l;
+                b.onclick = () => setup('letter-'+l);
+                lBtns.appendChild(b);
+            });
+        }
+    }
+
+    function setup(sub) {
+        state.sub = sub;
+        let pool = [...allWords];
+        let count = 10;
+
+        if(sub.startsWith('letter-')) {
+            const l = sub.split('-')[1];
+            pool = allWords.filter(w => w.en[0].toUpperCase() === l);
+            // 修正數學：1/2 且進位。L 的 15 個字算出來會是 8 題。
+            count = Math.max(1, Math.ceil(pool.length / 2)); 
+        } else if(sub.startsWith('dict-')) {
+            if(sub==='dict-AM') pool = allWords.filter(w => w.en[0].toUpperCase() <= 'M');
+            else if(sub==='dict-NZ') pool = allWords.filter(w => w.en[0].toUpperCase() >= 'N');
+            count = Math.min(pool.length, 15); // 大區上限 15 題
+        }
+
+        state.quiz = pool.sort(()=>Math.random()-0.5).slice(0, count);
+        state.cur = 0; state.res = []; state.start = Date.now();
+        document.getElementById('sub-menu').classList.add('hidden');
+        document.getElementById('game-play').classList.remove('hidden');
+        render();
+    }
+
+    function render() {
+        const q = state.quiz[state.cur];
+        document.getElementById('q-info').innerText = `${state.cur+1} / ${state.quiz.length}`;
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('submit-btn').classList.remove('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+        const qBox = document.getElementById('q-content');
+        const hint = document.getElementById('hint-text');
+        const cA = document.getElementById('choice-area');
+        const sA = document.getElementById('spell-area');
+        hint.innerText = ''; cA.classList.add('hidden'); sA.classList.add('hidden');
+
+        if(state.mode === 'choice') {
+            qBox.innerText = (state.sub==='en-zh') ? q.en : q.zh;
+            makeChoices(state.sub==='en-zh'?'zh':'en');
+            cA.classList.remove('hidden');
+        } else if(state.mode === 'listen-choice') {
+            qBox.innerHTML = `<button onclick="play()" style="padding:10px 20px;">🔊 聽發音</button>`;
+            makeChoices('zh');
+            cA.classList.remove('hidden'); play();
+        } else {
+            qBox.innerHTML = (state.mode==='dictation') ? `<button onclick="play()" style="padding:10px 20px;">🔊 聽寫</button>` : q.zh;
+            sA.classList.remove('hidden');
+            const si = document.getElementById('spell-input');
+            si.value = '';
+            setTimeout(()=>si.focus(), 300);
+            if(state.mode==='dictation') play();
+        }
+    }
+
+    function makeChoices(type) {
+        const area = document.getElementById('choice-area'); area.innerHTML = '';
+        const correct = state.quiz[state.cur][type];
+        let opts = [correct];
+        while(opts.length < 4) {
+            let r = allWords[Math.floor(Math.random()*allWords.length)][type];
+            if(!opts.includes(r)) opts.push(r);
+        }
+        opts.sort(()=>Math.random()-0.5).forEach(o => {
+            const d = document.createElement('div'); d.className = 'option-item';
+            d.innerText = o; d.onclick = () => {
+                document.querySelectorAll('.option-item').forEach(x => x.classList.remove('selected'));
+                d.classList.add('selected');
+            };
+            area.appendChild(d);
+        });
+    }
+
+    function play() {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(state.quiz[state.cur].en);
+        m.rate = 0.7;
+        window.speechSynthesis.speak(m);
+    }
+
+    function processSubmit() {
+        const q = state.quiz[state.cur];
+        let u = "", ok = false;
+        if(state.mode.includes('choice')) {
+            const s = document.querySelector('.option-item.selected');
+            if(!s) return alert("請選擇答案");
+            u = s.innerText; ok = (u===q.en || u===q.zh);
+            document.querySelectorAll('.option-item').forEach(x => {
+                if(x.innerText === q.en || x.innerText === q.zh) x.classList.add('correct');
+                else if(x.classList.contains('selected')) x.classList.add('wrong');
+            });
+        } else {
+            u = document.getElementById('spell-input').value.trim();
+            if(!u) return alert("請輸入單字");
+            ok = (u.toLowerCase() === q.en.toLowerCase());
+        }
+        state.res.push({ q: q.en, zh: q.zh, u: u, ok: ok });
+        const f = document.getElementById('feedback');
+        f.innerText = ok ? "✓ 正確" : "✗ 錯誤 (答案: "+q.en+")";
+        f.className = ok ? "status-ok" : "status-no";
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function goNext() {
+        state.cur++;
+        if(state.cur < state.quiz.length) render();
+        else finish();
+    }
+
+    function finish() {
+        const sec = Math.round((Date.now() - state.start)/1000);
+        const score = Math.round((state.res.filter(r=>r.ok).length / state.quiz.length)*100);
+        let rs = JSON.parse(localStorage.getItem('NWeiV3')) || { choice:[], 'listen-choice':[], spell:[], dictation:[] };
+        rs[state.mode].push({ name: state.name, score, time: sec });
+        rs[state.mode].sort((a,b) => b.score - a.score || a.time - b.time);
+        rs[state.mode] = rs[state.mode].slice(0, 10);
+        localStorage.setItem('NWeiV3', JSON.stringify(rs));
+
+        document.getElementById('game-play').classList.add('hidden');
+        document.getElementById('result-report').classList.remove('hidden');
+        document.getElementById('res-score').innerText = `得分：${score} | 用時：${sec}秒`;
+        const rb = document.getElementById('report-body'); rb.innerHTML = '';
+        state.res.forEach(r => {
+            rb.innerHTML += `<tr><td>${r.q}<br><small>${r.zh}</small></td><td class="${r.ok?'status-ok':'status-no'}">${r.u || '(未填)'} ${r.ok?'':'<br>(正確:'+r.q+')'}</td></tr>`;
+        });
+    }
+
+    function updateRankUI(m, e) {
+        if(e) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); }
+        const b = document.getElementById('rank-body'); b.innerHTML = '';
+        const data = (JSON.parse(localStorage.getItem('NWeiV3')) || {})[m] || [];
+        if(!data.length) b.innerHTML = '<tr><td colspan="4">暫無資料</td></tr>';
+        else data.forEach((r,i) => b.innerHTML += `<tr><td>${i+1}</td><td>${r.name}</td><td>${r.score}</td><td>${r.time}s</td></tr>`);
+    }
+
+    function goBackMenu() { document.getElementById('sub-menu').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); }
+    window.onload = () => updateRankUI('choice');
+</script>
+</body>
+</html>
