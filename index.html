@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>內惟單字王：單字全量校正版</title>
+    <title>內惟單字王：雲端同步版</title>
     <style>
         :root { --p: #6c5ce7; --s: #a29bfe; --acc: #00b894; --dmg: #ff7675; --dark: #0f0c29; --gold: #f1c40f; }
         body { margin: 0; background: #0f0c29; color: white; font-family: 'Microsoft JhengHei', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -39,6 +39,7 @@
 <div id="game-container">
     <div id="login-page">
         <h1 style="color:var(--gold)">🏆 內惟單字王 🏆</h1>
+        <p style="font-size: 0.9rem; color: #888;">成績將自動同步至老師的試算表</p>
         <input type="text" id="username-input" placeholder="請輸入姓名..." maxlength="10">
         <div class="menu-grid">
             <button onclick="handleLogin()" style="background:var(--acc); color:black; font-weight:bold;">進入測驗</button>
@@ -102,12 +103,20 @@
 </div>
 
 <script>
-    // 完整的 284 個單字清單 (確保 L 有 15 個)
+    // --- Google 表單同步設定 ---
+    const GOOGLE_CONFIG = {
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSd9OayKId20aFh88R42j1Lz_O9-38Z-C62a1x9S_L7-7e_Cdw/formResponse",
+        entryName: "entry.1506509939",
+        entryScore: "entry.2064115160",
+        entryTime: "entry.181816556",
+        entryMode: "entry.1353982544"
+    };
+
     const allWords = [
         {en:"after",zh:"之後"},{en:"airport",zh:"機場"},{en:"April",zh:"四月"},{en:"across",zh:"跨越"},{en:"alone",zh:"單獨"},{en:"arrive",zh:"抵達"},{en:"ago",zh:"之前"},{en:"already",zh:"已經"},{en:"artist",zh:"藝術家"},{en:"actor",zh:"演員"},{en:"amazing",zh:"驚人的"},{en:"astronaut",zh:"太空人"},{en:"actually",zh:"其實"},{en:"ambulance",zh:"救護車"},{en:"August",zh:"八月"},{en:"agree",zh:"同意"},{en:"anyone",zh:"任何人"},{en:"autumn",zh:"秋天"},{en:"adventure",zh:"冒險"},{en:"anywhere",zh:"任何地方"},{en:"away",zh:"遠離"},{en:"appear",zh:"出現"},{en:"as",zh:"如同"},
         {en:"backpack",zh:"背包"},{en:"belt",zh:"皮帶"},{en:"bridge",zh:"橋"},{en:"bandage",zh:"繃帶"},{en:"bored",zh:"無聊的"},{en:"broken",zh:"破損"},{en:"bank",zh:"銀行"},{en:"bicycle",zh:"腳踏車"},{en:"brush",zh:"刷子"},{en:"before",zh:"之前"},{en:"borrow",zh:"借入"},{en:"business",zh:"商業"},{en:"begin",zh:"開始"},{en:"biscuit",zh:"餅乾"},{en:"butterfly",zh:"蝴蝶"},{en:"believe",zh:"相信"},{en:"bracelet",zh:"手鍊"},{en:"break",zh:"打破"},
         {en:"calendar",zh:"日曆"},{en:"channel",zh:"頻道"},{en:"club",zh:"社團"},{en:"camp",zh:"露營"},{en:"chat",zh:"聊天"},{en:"collect",zh:"收集"},{en:"cartoon",zh:"卡通"},{en:"cheap",zh:"便宜"},{en:"competition",zh:"比賽"},{en:"castle",zh:"城堡"},{en:"chemist",zh:"化學家"},{en:"concert",zh:"演唱會"},{en:"cave",zh:"洞穴"},{en:"chess",zh:"西洋棋"},{en:"conversation",zh:"會話"},{en:"century",zh:"世紀"},{en:"chopsticks",zh:"筷子"},{en:"corner",zh:"角落"},{en:"costume",zh:"服裝"},{en:"creature",zh:"生物"},{en:"crown",zh:"皇冠"},
-        {en:"dark",zh:"黑暗"},{en:"deep",zh:"深"},{en:"diary",zh:"日記"},{en:"date",zh:"日期"},{en:"delicious",zh:"美味的"},{en:"dictionary",zh:"字典"},{en:"December",zh:"十二月"},{en:"desert",zh:"沙漠"},{en:"dinosaur",zh:"恐龍"},{en:"decide",zh:"決定"},{en:"design",zh:"設計"},{en:"drum",zh:"鼓"},
+        {en:"dark",zh:"黑暗"},{en:"deep",zh:"挑戰"},{en:"diary",zh:"日記"},{en:"date",zh:"日期"},{en:"delicious",zh:"美味的"},{en:"dictionary",zh:"字典"},{en:"December",zh:"十二月"},{en:"desert",zh:"沙漠"},{en:"dinosaur",zh:"恐龍"},{en:"decide",zh:"決定"},{en:"design",zh:"設計"},{en:"drum",zh:"鼓"},
         {en:"each",zh:"每個"},{en:"else",zh:"其他"},{en:"enough",zh:"足夠"},{en:"early",zh:"早的"},{en:"empty",zh:"空的"},{en:"environment",zh:"環境"},{en:"earth",zh:"地球"},{en:"end",zh:"結束"},{en:"excellent",zh:"傑出的"},{en:"east",zh:"東方"},{en:"engine",zh:"引擎"},{en:"expensive",zh:"昂貴的"},
         {en:"factory",zh:"工廠"},{en:"fill",zh:"填充"},{en:"flashlight",zh:"手電筒"},{en:"fall",zh:"落下"},{en:"finally",zh:"最後"},{en:"floor",zh:"地板"},{en:"famous",zh:"著名的"},{en:"finish",zh:"完成"},{en:"foreign",zh:"外國的"},{en:"February",zh:"二月"},{en:"fireman",zh:"消防員"},{en:"frightened",zh:"受驚的"},{en:"feel",zh:"感覺"},{en:"flag",zh:"旗子"},{en:"future",zh:"未來"},
         {en:"gate",zh:"大門"},{en:"gold",zh:"黃金"},{en:"grow",zh:"成長"},{en:"geography",zh:"地理"},{en:"golf",zh:"高爾夫"},{en:"guess",zh:"猜測"},{en:"get",zh:"得到"},{en:"group",zh:"團體"},{en:"guitar",zh:"吉他"},
@@ -134,7 +143,7 @@
 
     function handleLogin() {
         const val = document.getElementById('username-input').value.trim();
-        if(!val) return alert("請輸入名字");
+        if(!val) return alert("請輸入姓名");
         state.name = val;
         document.getElementById('display-user').innerText = val;
         document.getElementById('login-page').classList.add('hidden');
@@ -175,12 +184,12 @@
         if(sub.startsWith('letter-')) {
             const l = sub.split('-')[1];
             pool = allWords.filter(w => w.en[0].toUpperCase() === l);
-            // 修正數學：1/2 且進位。L 的 15 個字算出來會是 8 題。
+            // 規則：字母專區 1/2 進位，L(15字) 會是 8 題
             count = Math.max(1, Math.ceil(pool.length / 2)); 
         } else if(sub.startsWith('dict-')) {
             if(sub==='dict-AM') pool = allWords.filter(w => w.en[0].toUpperCase() <= 'M');
             else if(sub==='dict-NZ') pool = allWords.filter(w => w.en[0].toUpperCase() >= 'N');
-            count = Math.min(pool.length, 15); // 大區上限 15 題
+            count = Math.min(pool.length, 15); 
         }
 
         state.quiz = pool.sort(()=>Math.random()-0.5).slice(0, count);
@@ -241,7 +250,7 @@
     function play() {
         window.speechSynthesis.cancel();
         const m = new SpeechSynthesisUtterance(state.quiz[state.cur].en);
-        m.rate = 0.7;
+        m.rate = 0.7; // 依照要求設定為 0.7 倍速
         window.speechSynthesis.speak(m);
     }
 
@@ -278,25 +287,45 @@
     function finish() {
         const sec = Math.round((Date.now() - state.start)/1000);
         const score = Math.round((state.res.filter(r=>r.ok).length / state.quiz.length)*100);
-        let rs = JSON.parse(localStorage.getItem('NWeiV3')) || { choice:[], 'listen-choice':[], spell:[], dictation:[] };
+        
+        // 1. 本地排行榜 (瀏覽器存擋)
+        let rs = JSON.parse(localStorage.getItem('NWeiV4')) || { choice:[], 'listen-choice':[], spell:[], dictation:[] };
         rs[state.mode].push({ name: state.name, score, time: sec });
         rs[state.mode].sort((a,b) => b.score - a.score || a.time - b.time);
         rs[state.mode] = rs[state.mode].slice(0, 10);
-        localStorage.setItem('NWeiV3', JSON.stringify(rs));
+        localStorage.setItem('NWeiV4', JSON.stringify(rs));
 
+        // 2. 雲端同步 (Google 表單)
+        sendToGoogleSheet(state.name, score, sec, state.mode);
+
+        // 3. 顯示結果
         document.getElementById('game-play').classList.add('hidden');
         document.getElementById('result-report').classList.remove('hidden');
-        document.getElementById('res-score').innerText = `得分：${score} | 用時：${sec}秒`;
+        document.getElementById('res-score').innerText = `得分：${score} | 用時：${sec}秒 (雲端已同步)`;
         const rb = document.getElementById('report-body'); rb.innerHTML = '';
         state.res.forEach(r => {
             rb.innerHTML += `<tr><td>${r.q}<br><small>${r.zh}</small></td><td class="${r.ok?'status-ok':'status-no'}">${r.u || '(未填)'} ${r.ok?'':'<br>(正確:'+r.q+')'}</td></tr>`;
         });
     }
 
+    function sendToGoogleSheet(name, score, time, mode) {
+        const formData = new FormData();
+        formData.append(GOOGLE_CONFIG.entryName, name);
+        formData.append(GOOGLE_CONFIG.entryScore, score);
+        formData.append(GOOGLE_CONFIG.entryTime, time);
+        formData.append(GOOGLE_CONFIG.entryMode, mode);
+
+        fetch(GOOGLE_CONFIG.url, {
+            method: "POST",
+            mode: "no-cors",
+            body: formData
+        }).catch(err => console.log("同步略有延遲"));
+    }
+
     function updateRankUI(m, e) {
         if(e) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); }
         const b = document.getElementById('rank-body'); b.innerHTML = '';
-        const data = (JSON.parse(localStorage.getItem('NWeiV3')) || {})[m] || [];
+        const data = (JSON.parse(localStorage.getItem('NWeiV4')) || {})[m] || [];
         if(!data.length) b.innerHTML = '<tr><td colspan="4">暫無資料</td></tr>';
         else data.forEach((r,i) => b.innerHTML += `<tr><td>${i+1}</td><td>${r.name}</td><td>${r.score}</td><td>${r.time}s</td></tr>`);
     }
