@@ -2,58 +2,85 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>內惟單字王：全功能官方校訂版</title>
+    <title>內惟單字王：預習優先版</title>
     <style>
-        :root { --p: #6c5ce7; --s: #a29bfe; --acc: #00b894; --dmg: #ff7675; --dark: #0f0c29; --gold: #f1c40f; }
-        body { margin: 0; background: #0f0c29; color: white; font-family: 'Microsoft JhengHei', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        :root { --p: #6c5ce7; --s: #a29bfe; --acc: #00b894; --dmg: #ff7675; --dark: #0f0c29; --gold: #f1c40f; --study: #00cec9; }
+        body { margin: 0; background: #0f0c29; color: white; font-family: 'Microsoft JhengHei', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         #game-container { width: 95%; max-width: 800px; background: rgba(0, 0, 0, 0.95); border: 3px solid var(--p); border-radius: 20px; padding: 25px; box-shadow: 0 0 50px var(--p); text-align: center; }
         .hidden { display: none !important; }
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .home-link { background: rgba(255,255,255,0.1); border: 1px solid #555; color: #aaa; padding: 6px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
         .user-tag { color: var(--gold); font-weight: bold; }
-        input[type="text"] { background: rgba(255,255,255,0.1); border: 2px solid var(--s); border-radius: 10px; color: white; padding: 12px; font-size: 1.2rem; text-align: center; width: 80%; outline: none; }
-        .menu-grid { display: grid; gap: 10px; margin-top: 15px; }
+        .section-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #444; }
+        .section-title { font-size: 1.2rem; color: var(--study); margin-bottom: 15px; font-weight: bold; }
+        
+        input[type="text"] { background: rgba(255,255,255,0.1); border: 2px solid var(--s); border-radius: 10px; color: white; padding: 12px; font-size: 1.2rem; text-align: center; width: 80%; outline: none; margin-bottom: 10px; }
+        .menu-grid { display: grid; gap: 10px; }
         button { background: rgba(255,255,255,0.1); border: 2px solid var(--s); color: white; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
         button:hover { background: var(--p); transform: translateY(-2px); }
-        .rank-container { margin-top: 25px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid #444; }
+        
+        /* 學習瀏覽樣式 */
+        .study-list { text-align: left; max-height: 400px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px; }
+        .study-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333; }
+        .word-info b { font-size: 1.3rem; color: var(--study); }
+        .ipa { color: var(--gold); font-family: 'Segoe UI', sans-serif; margin-left: 8px; font-size: 0.95rem; }
+        .zh-text { color: #ccc; font-size: 0.95rem; display: block; margin-top: 4px; }
+
+        /* 排行榜樣式 */
+        .rank-container { margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
         .rank-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
-        .tab-btn { flex: 1; font-size: 0.8rem; padding: 8px; background: transparent; border: 1px solid #555; border-radius: 5px; color: #888; }
+        .tab-btn { flex: 1; font-size: 0.75rem; padding: 8px; background: transparent; border: 1px solid #555; border-radius: 5px; color: #888; cursor: pointer; }
         .tab-btn.active { background: var(--gold); color: black; border-color: var(--gold); }
         .rank-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
         .rank-table th, .rank-table td { padding: 8px; border-bottom: 1px solid #333; }
+
+        /* 遊戲介面樣式 */
         #display-box { min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 15px 0; border: 1px dashed #555; border-radius: 15px; background: rgba(255,255,255,0.03); }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .option-item { background: #2d3436; border: 2px solid #636e72; padding: 18px; border-radius: 12px; cursor: pointer; }
         .option-item.selected { border-color: #fff; background: var(--p); }
-        .option-item.correct { background: var(--acc) !important; color: #000; font-weight: bold; }
-        .option-item.wrong { background: var(--dmg) !important; }
-        #spell-input { width: 85%; font-size: 2rem; border: none; border-bottom: 3px solid var(--s); margin-bottom: 20px; color: white; background: transparent; text-align: center; }
+        #spell-input { width: 85%; font-size: 2rem; border: none; border-bottom: 3px solid var(--s); margin-bottom: 20px; color: white; background: transparent; text-align: center; outline: none; }
         .status-ok { color: var(--acc); font-weight: bold; }
         .status-no { color: var(--dmg); font-weight: bold; }
-        .summary-table { width: 100%; text-align: left; font-size: 0.9rem; }
-        .replay-btn { background: var(--gold); color: black; border: none; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .summary-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; }
+        .summary-table th, .summary-table td { padding: 10px; border-bottom: 1px solid #444; }
+        .replay-btn { background: var(--gold); color: black; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="login-page">
-        <h1 style="color:var(--gold)">🏆 內惟單字王 🏆</h1>
-        <input type="text" id="username-input" placeholder="請輸入姓名..." maxlength="10">
-        <div class="menu-grid"><button onclick="handleLogin()" style="background:var(--acc); color:black; font-weight:bold;">進入系統</button></div>
-        <div class="rank-container">
-            <div class="rank-tabs">
-                <button class="tab-btn active" onclick="updateRankUI('choice', event)">選擇榜</button>
-                <button class="tab-btn" onclick="updateRankUI('listen-choice', event)">聽力榜</button>
-                <button class="tab-btn" onclick="updateRankUI('spell', event)">拼字榜</button>
-                <button class="tab-btn" onclick="updateRankUI('dictation', event)">聽寫榜</button>
+    <div id="start-page">
+        <h1 style="color:var(--gold); margin-bottom:30px;">🏆 內惟單字王 🏆</h1>
+        
+        <div class="section-box">
+            <div class="section-title">📖 自由學習模式</div>
+            <div class="menu-grid">
+                <button style="background:var(--study); color:black; font-weight:bold; border:none;" onclick="openStudyMode()">免登入：瀏覽單字與音標</button>
             </div>
-            <table class="rank-table"><thead><tr><th>#</th><th>姓名</th><th>得分</th><th>用時</th></tr></thead><tbody id="rank-body"></tbody></table>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">✍️ 挑戰測驗模式</div>
+            <input type="text" id="username-input" placeholder="請輸入姓名以計分..." maxlength="10">
+            <div class="menu-grid">
+                <button onclick="handleLogin()" style="background:var(--acc); color:black; font-weight:bold; border:none;">進入挑戰</button>
+            </div>
+            
+            <div class="rank-container">
+                <div class="rank-tabs">
+                    <button class="tab-btn active" onclick="updateRankUI('choice', event)">選擇榜</button>
+                    <button class="tab-btn" onclick="updateRankUI('listen-choice', event)">聽力榜</button>
+                    <button class="tab-btn" onclick="updateRankUI('spell', event)">拼字榜</button>
+                    <button class="tab-btn" onclick="updateRankUI('dictation', event)">聽寫榜</button>
+                </div>
+                <table class="rank-table"><thead><tr><th>#</th><th>姓名</th><th>得分</th><th>用時</th></tr></thead><tbody id="rank-body"></tbody></table>
+            </div>
         </div>
     </div>
 
-    <div id="main-menu" class="hidden">
-        <div class="top-nav"><div class="user-tag">👤 <span id="display-user"></span></div><div class="home-link" onclick="location.reload()">登出</div></div>
+    <div id="test-menu" class="hidden">
+        <div class="top-nav"><div class="user-tag">👤 考生：<span id="display-user"></span></div><div class="home-link" onclick="location.reload()">切換帳號</div></div>
         <div class="menu-grid">
             <button onclick="showSubMenu('choice')">📜 英漢選擇</button>
             <button onclick="showSubMenu('listen-choice')">🎧 聽力選擇</button>
@@ -62,8 +89,14 @@
         </div>
     </div>
 
+    <div id="study-mode" class="hidden">
+        <div class="top-nav"><div class="home-link" onclick="closeStudyMode()">⬅ 返回入口</div><div class="user-tag">單字預習中</div></div>
+        <div id="study-letter-btns" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap:5px; margin-bottom:15px;"></div>
+        <div class="study-list" id="study-list-content"></div>
+    </div>
+
     <div id="sub-menu" class="hidden">
-        <div class="top-nav"><div class="home-link" onclick="goBackMenu()">⬅ 返回</div><div class="user-tag">題庫範圍</div></div>
+        <div class="top-nav"><div class="home-link" onclick="goBackMenu()">⬅ 返回選單</div><div class="user-tag">題庫範圍</div></div>
         <div id="sub-buttons" class="menu-grid"></div>
         <div id="letter-zone" class="hidden">
             <hr style="border:0.5px solid #333; margin:20px 0;">
@@ -74,7 +107,7 @@
     <div id="game-play" class="hidden">
         <div class="top-nav"><div class="home-link" onclick="location.reload()">🏠 終止</div><div id="q-info" class="user-tag"></div></div>
         <div id="display-box">
-            <button id="replay-btn" class="replay-btn hidden" onclick="play()">🔊 點我重聽</button>
+            <button id="replay-btn" class="replay-btn hidden" onclick="playAudio()">🔊 點我重聽</button>
             <div id="q-content" style="font-size: 2.2rem; font-weight: bold;"></div>
         </div>
         <div id="choice-area" class="options-grid hidden"></div>
@@ -86,7 +119,7 @@
 
     <div id="result-report" class="hidden">
         <h2 id="res-score" style="color:var(--gold)"></h2>
-        <div style="max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px;">
+        <div style="max-height: 350px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 10px;">
             <table class="summary-table">
                 <thead><tr><th>單字</th><th>中文</th><th>結果</th></tr></thead>
                 <tbody id="report-body"></tbody>
@@ -97,57 +130,92 @@
 </div>
 
 <script>
-    const GOOGLE_CONFIG = {
-        url: "https://docs.google.com/forms/d/e/1FAIpQLSd9OayKId20aFh88R42j1Lz_O9-38Z-C62a1x9S_L7-7e_Cdw/formResponse",
-        entryName: "entry.1506509939", entryScore: "entry.2064115160", entryTime: "entry.181816556", entryMode: "entry.1353982544"
-    };
-
     const allWords = [
-        {en:"after",zh:"之後"},{en:"airport",zh:"機場"},{en:"April",zh:"四月"},{en:"across",zh:"跨越"},{en:"alone",zh:"單獨"},{en:"arrive",zh:"抵達"},{en:"ago",zh:"之前"},{en:"already",zh:"已經"},{en:"artist",zh:"藝術家"},{en:"actor",zh:"演員"},{en:"amazing",zh:"驚人的"},{en:"astronaut",zh:"太空人"},{en:"actually",zh:"其實"},{en:"ambulance",zh:"救護車"},{en:"August",zh:"八月"},{en:"agree",zh:"同意"},{en:"anyone",zh:"任何人"},{en:"autumn",zh:"秋天"},{en:"adventure",zh:"冒險"},{en:"anywhere",zh:"任何地方"},{en:"away",zh:"遠離"},{en:"appear",zh:"出現"},{en:"as",zh:"如同"},
-        {en:"backpack",zh:"背包"},{en:"belt",zh:"皮帶"},{en:"bridge",zh:"橋"},{en:"bandage",zh:"繃帶"},{en:"bored",zh:"無聊的"},{en:"broken",zh:"破損"},{en:"bank",zh:"銀行"},{en:"bicycle",zh:"腳踏車"},{en:"brush",zh:"刷子"},{en:"before",zh:"之前"},{en:"borrow",zh:"借入"},{en:"business",zh:"商業"},{en:"begin",zh:"開始"},{en:"biscuit",zh:"餅乾"},{en:"butterfly",zh:"蝴蝶"},{en:"believe",zh:"相信"},{en:"bracelet",zh:"手鍊"},{en:"break",zh:"打破"},
-        {en:"calendar",zh:"日曆"},{en:"channel",zh:"頻道"},{en:"club",zh:"社團"},{en:"camp",zh:"露營"},{en:"chat",zh:"聊天"},{en:"collect",zh:"收集"},{en:"cartoon",zh:"卡通"},{en:"cheap",zh:"便宜"},{en:"competition",zh:"比賽"},{en:"castle",zh:"城堡"},{en:"chemist",zh:"化學家"},{en:"concert",zh:"演唱會"},{en:"cave",zh:"洞穴"},{en:"chess",zh:"西洋棋"},{en:"conversation",zh:"會話"},{en:"century",zh:"世紀"},{en:"chopsticks",zh:"筷子"},{en:"corner",zh:"角落"},{en:"costume",zh:"服裝"},{en:"creature",zh:"生物"},{en:"crown",zh:"皇冠"},
-        {en:"dark",zh:"黑暗"},{en:"deep",zh:"深"},{en:"diary",zh:"日記"},{en:"date",zh:"日期"},{en:"delicious",zh:"美味的"},{en:"dictionary",zh:"字典"},{en:"December",zh:"十二月"},{en:"desert",zh:"沙漠"},{en:"disappear",zh:"消失"},{en:"decide",zh:"決定"},{en:"design",zh:"設計"},{en:"during",zh:"在…期間"},
-        {en:"each",zh:"每一個"},{en:"engine",zh:"引擎"},{en:"everywhere",zh:"任何地方"},{en:"early",zh:"早期的"},{en:"enormous",zh:"巨大的"},{en:"excellent",zh:"優異"},{en:"Earth",zh:"地球"},{en:"enough",zh:"足夠的"},{en:"excited",zh:"興奮的"},{en:"east",zh:"東方"},{en:"enter",zh:"進入"},{en:"expensive",zh:"貴的"},{en:"elbow",zh:"手肘"},{en:"envelope",zh:"信封"},{en:"explain",zh:"解釋"},{en:"empty",zh:"空的"},{en:"environment",zh:"環境"},{en:"explore",zh:"探索"},
-        {en:"factory",zh:"工廠"},{en:"finish",zh:"完成"},{en:"fridge",zh:"冰箱"},{en:"fall",zh:"秋天"},{en:"flashlight",zh:"手電筒"},{en:"friendly",zh:"友善的"},{en:"February",zh:"二月"},{en:"foggy",zh:"有霧的"},{en:"frightening",zh:"害怕的"},{en:"festival",zh:"節日"},{en:"follow",zh:"跟隨"},{en:"full",zh:"充分"},{en:"finger",zh:"手指"},{en:"forget",zh:"忘記"},{en:"future",zh:"未來"},
-        {en:"gate",zh:"大門"},{en:"glove",zh:"手套"},{en:"group",zh:"團體"},{en:"geography",zh:"地理"},{en:"glue",zh:"膠水"},{en:"guess",zh:"猜"},{en:"get to",zh:"到達"},{en:"gold",zh:"黃金"},{en:"gym",zh:"健身房"},
-        {en:"half",zh:"一半"},{en:"heavy",zh:"重的"},{en:"horrible",zh:"可怕的"},{en:"happen",zh:"發生"},{en:"hill",zh:"山丘"},{en:"hotel",zh:"飯店"},{en:"hard",zh:"困難的"},{en:"history",zh:"歷史"},{en:"hour",zh:"小時"},{en:"hate",zh:"討厭"},{en:"hole",zh:"孔洞"},{en:"hurry",zh:"趕快"},{en:"hear",zh:"聽到"},{en:"hope",zh:"希望"},{en:"husband",zh:"老公"},
-        {en:"if",zh:"如果"},{en:"information",zh:"消息"},{en:"instrument",zh:"樂器"},{en:"important",zh:"重要的"},{en:"insect",zh:"昆蟲"},{en:"interesting",zh:"有趣的"},{en:"improve",zh:"改善"},{en:"instead",zh:"反而"},{en:"invitation",zh:"邀請"},
-        {en:"jam",zh:"果醬"},{en:"join",zh:"加入"},{en:"July",zh:"七月"},{en:"January",zh:"一月"},{en:"journalist",zh:"記者"},{en:"June",zh:"六月"},{en:"job",zh:"工作"},{en:"journey",zh:"旅程"},{en:"just",zh:"只是"},
-        {en:"keep",zh:"保持"},{en:"kind",zh:"友善的"},{en:"knee",zh:"膝蓋"},{en:"key",zh:"鑰匙"},{en:"king",zh:"國王"},{en:"knife",zh:"刀子"},
-        {en:"land",zh:"降落"},{en:"leave",zh:"離開"},{en:"lift",zh:"舉"},{en:"language",zh:"語言"},{en:"left",zh:"左邊"},{en:"light",zh:"燈光"},{en:"large",zh:"大的"},{en:"let",zh:"讓"},{en:"lovely",zh:"可愛的"},{en:"later",zh:"之後"},{en:"letter",zh:"信"},{en:"low",zh:"低"},{en:"lazy",zh:"懶惰的"},{en:"lie",zh:"說謊"},{en:"lucky",zh:"幸運的"},
-        {en:"magazine",zh:"雜誌"},{en:"meal",zh:"餐"},{en:"million",zh:"百萬"},{en:"manager",zh:"主管"},{en:"medicine",zh:"藥"},{en:"mind",zh:"在意"},{en:"March",zh:"三月"},{en:"meeting",zh:"會議"},{en:"minute",zh:"分鐘"},{en:"married",zh:"已婚的"},{en:"member",zh:"會員"},{en:"missing",zh:"想念的"},{en:"math",zh:"數學"},{en:"metal",zh:"金屬"},{en:"month",zh:"月份"},{en:"May",zh:"五月"},{en:"middle",zh:"中間的"},{en:"museum",zh:"博物館"},
-        {en:"necklace",zh:"項鍊"},{en:"next",zh:"下一個"},{en:"north",zh:"北方"},{en:"newspaper",zh:"報紙"},{en:"noisy",zh:"吵鬧的"},{en:"November",zh:"十一月"},
-        {en:"ocean",zh:"海洋"},{en:"office",zh:"辦公室"},{en:"other",zh:"其他的"},{en:"October",zh:"十月"},{en:"once",zh:"一次"},{en:"oven",zh:"烤箱"},{en:"of course",zh:"當然"},{en:"online",zh:"線上"},{en:"over",zh:"過度"},
-        {en:"passenger",zh:"旅客"},{en:"pilot",zh:"機長"},{en:"prepare",zh:"準備"},{en:"past",zh:"過去"},{en:"planet",zh:"行星"},{en:"prize",zh:"獎賞"},{en:"path",zh:"路徑"},{en:"platform",zh:"平台"},{en:"problem",zh:"問題"},{en:"pepper",zh:"胡椒"},{en:"pocket",zh:"口袋"},{en:"project",zh:"計畫"},{en:"perhaps",zh:"也許"},{en:"poor",zh:"窮的"},{en:"puzzle",zh:"難題"},{en:"piece",zh:"一片"},{en:"popular",zh:"受歡迎的"},{en:"pyramid",zh:"金字塔"},
-        {en:"quarter",zh:"四分之一"},{en:"quite",zh:"相當"},{en:"quiz",zh:"測驗"},
-        {en:"race",zh:"比賽"},{en:"remember",zh:"記得"},{en:"restaurant",zh:"餐廳"},{en:"railway",zh:"鐵路"},{en:"repair",zh:"修理"},{en:"right",zh:"右邊"},{en:"ready",zh:"準備好"},{en:"repeat",zh:"重複"},{en:"rocket",zh:"火箭"},
-        {en:"salt",zh:"鹽巴"},{en:"singer",zh:"歌手"},{en:"spend",zh:"花費"},{en:"save",zh:"保存"},{en:"skyscraper",zh:"摩天大樓"},{en:"spot",zh:"地點"},{en:"score",zh:"分數"},{en:"smell",zh:"聞"},{en:"spring",zh:"春天"},{en:"screen",zh:"螢幕"},{en:"snack",zh:"零食"},{en:"stadium",zh:"體育館"},{en:"search",zh:"尋找"},{en:"so",zh:"所以"},{en:"stage",zh:"舞台"},{en:"secret",zh:"秘密"},{en:"somewhere",zh:"某個地方"},{en:"stay",zh:"待"},{en:"September",zh:"九月"},{en:"soon",zh:"不久"},{en:"still",zh:"仍然"},{en:"several",zh:"好幾個"},{en:"sound",zh:"聲音"},{en:"strange",zh:"奇怪"},{en:"shelf",zh:"書架"},{en:"south",zh:"南方"},{en:"suddenly",zh:"突然"},{en:"should",zh:"應該"},{en:"space",zh:"空間"},{en:"summer",zh:"夏天"},{en:"silver",zh:"銀色"},{en:"speak",zh:"說"},{en:"surprise",zh:"驚喜"},{en:"since",zh:"自從"},{en:"special",zh:"特別的"},{en:"swing",zh:"擺動"},
-        {en:"taste",zh:"味道"},{en:"thousand",zh:"千"},{en:"tomorrow",zh:"明天"},{en:"team",zh:"隊伍"},{en:"through",zh:"通過"},{en:"tour",zh:"旅行"},{en:"tent",zh:"帳篷"},{en:"timetable",zh:"時刻表"},{en:"traffic",zh:"交通"},{en:"theater",zh:"戲院"},{en:"together",zh:"一起"},{en:"twice",zh:"兩次"},
-        {en:"unhappy",zh:"不開心"},{en:"university",zh:"大學"},{en:"use",zh:"用"},{en:"uniform",zh:"制服"},{en:"until",zh:"直到"},{en:"usually",zh:"通常"},
-        {en:"view",zh:"景色"},{en:"violin",zh:"小提琴"},{en:"visit",zh:"拜訪"},
-        {en:"waiter",zh:"服務生"},{en:"wife",zh:"老婆"},{en:"wish",zh:"希望"},{en:"warm",zh:"溫暖的"},{en:"wild",zh:"野外的"},{en:"without",zh:"沒有"},{en:"west",zh:"西方"},{en:"will",zh:"將會"},{en:"wonderful",zh:"美妙的"},{en:"wheel",zh:"輪胎"},{en:"winner",zh:"冠軍"},{en:"wood",zh:"木頭"},{en:"while",zh:"當"},{en:"winter",zh:"冬天"},{en:"worried",zh:"擔心的"},
-        {en:"x-ray",zh:"x光"},{en:"yet",zh:"但是"},{en:"zero",zh:"零"}
+        {en:"after", ipa:"/ˈæftər/", zh:"之後"},{en:"airport", ipa:"/ˈerˌpɔrt/", zh:"機場"},{en:"April", ipa:"/ˈeɪprəl/", zh:"四月"},{en:"across", ipa:"/əˈ防rɔs/", zh:"跨越"},{en:"alone", ipa:"/əˈloʊn/", zh:"單獨"},{en:"arrive", ipa:"/əˈraɪv/", zh:"抵達"},{en:"ago", ipa:"/əˈɡoʊ/", zh:"之前"},{en:"already", ipa:"/ɔlˈrɛdi/", zh:"已經"},{en:"artist", ipa:"/ˈɑrtɪst/", zh:"藝術家"},{en:"actor", ipa:"/ˈæktər/", zh:"演員"},{en:"amazing", ipa:"/əˈmeɪzɪŋ/", zh:"驚人的"},{en:"astronaut", ipa:"/ˈæstrəˌnɔt/", zh:"太空人"},{en:"actually", ipa:"/ˈæktʃuəli/", zh:"其實"},{en:"ambulance", ipa:"/ˈæmbjələns/", zh:"救護車"},{en:"August", ipa:"/ˈɔɡəst/", zh:"八月"},{en:"agree", ipa:"/əˈɡri/", zh:"同意"},{en:"anyone", ipa:"/ˈɛniˌwʌn/", zh:"任何人"},{en:"autumn", ipa:"/ˈɔtəm/", zh:"秋天"},{en:"adventure", ipa:"/ədˈvɛntʃər/", zh:"冒險"},{en:"anywhere", ipa:"/ˈɛniˌwɛr/", zh:"任何地方"},{en:"away", ipa:"/əˈweɪ/", zh:"遠離"},{en:"appear", ipa:"/əˈpɪr/", zh:"出現"},{en:"as", ipa:"/æz/", zh:"如同"},
+        {en:"backpack", ipa:"/ˈbækˌpæk/", zh:"背包"},{en:"belt", ipa:"/bɛlt/", zh:"皮帶"},{en:"bridge", ipa:"/brɪdʒ/", zh:"橋"},{en:"bandage", ipa:"/ˈbændɪdʒ/", zh:"繃帶"},{en:"bored", ipa:"/bɔrd/", zh:"無聊的"},{en:"broken", ipa:"/ˈbroʊkən/", zh:"破損"},{en:"bank", ipa:"/bæŋk/", zh:"銀行"},{en:"bicycle", ipa:"/ˈbaɪsɪkəl/", zh:"腳踏車"},{en:"brush", ipa:"/brʌʃ/", zh:"刷子"},{en:"before", ipa:"/bɪˈfɔr/", zh:"之前"},{en:"borrow", ipa:"/ˈbɑroʊ/", zh:"借入"},{en:"business", ipa:"/ˈbɪznəs/", zh:"商業"},{en:"begin", ipa:"/bɪˈɡɪn/", zh:"開始"},{en:"biscuit", ipa:"/ˈbɪskɪt/", zh:"餅乾"},{en:"butterfly", ipa:"/ˈbʌtərˌflaɪ/", zh:"蝴蝶"},{en:"believe", ipa:"/bɪˈliv/", zh:"相信"},{en:"bracelet", ipa:"/ˈbreɪslət/", zh:"手鍊"},{en:"break", ipa:"/breɪk/", zh:"打破"},
+        {en:"calendar", ipa:"/ˈkæləndər/", zh:"日曆"},{en:"channel", ipa:"/ˈtʃænəl/", zh:"頻道"},{en:"club", ipa:"/klʌb/", zh:"社團"},{en:"camp", ipa:"/kæmp/", zh:"露營"},{en:"chat", ipa:"/tʃæt/", zh:"聊天"},{en:"collect", ipa:"/kəˈlɛkt/", zh:"收集"},{en:"cartoon", ipa:"/kɑrˈtun/", zh:"卡通"},{en:"cheap", ipa:"/tʃip/", zh:"便宜"},{en:"competition", ipa:"/ˌkɑmpəˈtɪʃən/", zh:"比賽"},{en:"castle", ipa:"/ˈkæsəl/", zh:"城堡"},{en:"chemist", ipa:"/ˈkɛmɪst/", zh:"化學家"},{en:"concert", ipa:"/ˈkɑnsərt/", zh:"演唱會"},{en:"cave", ipa:"/keɪv/", zh:"洞穴"},{en:"chess", ipa:"/tʃɛs/", zh:"西洋棋"},{en:"conversation", ipa:"/ˌkɑnvərˈseɪʃən/", zh:"會話"},{en:"century", ipa:"/ˈsɛntʃəri/", zh:"世紀"},{en:"chopsticks", ipa:"/ˈtʃɑpˌstɪks/", zh:"筷子"},{en:"corner", ipa:"/ˈkɔrnər/", zh:"角落"},{en:"costume", ipa:"/ˈkɑstʊm/", zh:"服裝"},{en:"creature", ipa:"/ˈkritʃər/", zh:"生物"},{en:"crown", ipa:"/kraʊn/", zh:"皇冠"},
+        {en:"dark", ipa:"/dɑrk/", zh:"黑暗"},{en:"deep", ipa:"/dip/", zh:"深"},{en:"diary", ipa:"/ˈdaɪəri/", zh:"日記"},{en:"date", ipa:"/deɪt/", zh:"日期"},{en:"delicious", ipa:"/dɪˈlɪʃəs/", zh:"美味的"},{en:"dictionary", ipa:"/ˈdɪkʃəˌnɛri/", zh:"字典"},{en:"December", ipa:"/dɪˈsɛmbər/", zh:"十二月"},{en:"desert", ipa:"/ˈdɛzərt/", zh:"沙漠"},{en:"disappear", ipa:"/ˌdɪsəˈpɪr/", zh:"消失"},{en:"decide", ipa:"/dɪˈsaɪd/", zh:"決定"},{en:"design", ipa:"/dɪˈzaɪn/", zh:"設計"},{en:"during", ipa:"/ˈdʊrɪŋ/", zh:"在…期間"},
+        {en:"each", ipa:"/itʃ/", zh:"每一個"},{en:"engine", ipa:"/ˈɛndʒɪn/", zh:"引擎"},{en:"everywhere", ipa:"/ˈɛvriˌwɛr/", zh:"任何地方"},{en:"early", ipa:"/ˈɜrli/", zh:"早期的"},{en:"enormous", ipa:"/ɪˈnɔrməs/", zh:"巨大的"},{en:"excellent", ipa:"/ˈɛksələnt/", zh:"優異"},{en:"Earth", ipa:"/ɜrθ/", zh:"地球"},{en:"enough", ipa:"/ɪˈnʌf/", zh:"足夠的"},{en:"excited", ipa:"/ɪkˈsaɪtɪd/", zh:"興奮的"},{en:"east", ipa:"/ist/", zh:"東方"},{en:"enter", ipa:"/ˈɛntər/", zh:"進入"},{en:"expensive", ipa:"/ɪkˈspɛnsɪv/", zh:"貴的"},{en:"elbow", ipa:"/ˈɛlˌboʊ/", zh:"手肘"},{en:"envelope", ipa:"/ˈɛnvəˌloʊp/", zh:"信封"},{en:"explain", ipa:"/ɪkˈspleɪn/", zh:"解釋"},{en:"empty", ipa:"/ˈɛmpti/", zh:"空的"},{en:"environment", ipa:"/ɪnˈvaɪrənmənt/", zh:"環境"},{en:"explore", ipa:"/ɪkˈsplɔr/", zh:"探索"},
+        {en:"factory", ipa:"/ˈfæktəri/", zh:"工廠"},{en:"finish", ipa:"/ˈfɪnɪʃ/", zh:"完成"},{en:"fridge", ipa:"/frɪdʒ/", zh:"冰箱"},{en:"fall", ipa:"/fɔl/", zh:"秋天"},{en:"flashlight", ipa:"/ˈflæʃˌlaɪt/", zh:"手電筒"},{en:"friendly", ipa:"/ˈfrɛndli/", zh:"友善的"},{en:"February", ipa:"/ˈfɛbjuˌɛri/", zh:"二月"},{en:"foggy", ipa:"/ˈfɔɡi/", zh:"有霧的"},{en:"frightening", ipa:"/ˈfraɪtənɪŋ/", zh:"害怕的"},{en:"festival", ipa:"/ˈfɛstəvəl/", zh:"節日"},{en:"follow", ipa:"/ˈfɑloʊ/", zh:"跟隨"},{en:"full", ipa:"/fʊl/", zh:"充分"},{en:"finger", ipa:"/ˈfɪŋɡər/", zh:"手指"},{en:"forget", ipa:"/fərˈɡɛt/", zh:"忘記"},{en:"future", ipa:"/ˈfjutʃər/", zh:"未來"},
+        {en:"gate", ipa:"/ɡeɪt/", zh:"大門"},{en:"glove", ipa:"/ɡlʌv/", zh:"手套"},{en:"group", ipa:"/ɡrup/", zh:"團體"},{en:"geography", ipa:"/dʒiˈɑɡrəfi/", zh:"地理"},{en:"glue", ipa:"/ɡlu/", zh:"膠水"},{en:"guess", ipa:"/ɡɛs/", zh:"猜"},{en:"get to", ipa:"/ɡɛt tu/", zh:"到達"},{en:"gold", ipa:"/ɡoʊld/", zh:"黃金"},{en:"gym", ipa:"/dʒɪm/", zh:"健身房"},
+        {en:"half", ipa:"/hæf/", zh:"一半"},{en:"heavy", ipa:"/ˈhɛvi/", zh:"重的"},{en:"horrible", ipa:"/ˈhɔrəbəl/", zh:"可怕的"},{en:"happen", ipa:"/ˈhæpən/", zh:"發生"},{en:"hill", ipa:"/hɪl/", zh:"山丘"},{en:"hotel", ipa:"/hoʊˈtɛl/", zh:"飯店"},{en:"hard", ipa:"/hɑrd/", zh:"困難的"},{en:"history", ipa:"/ˈhɪstəri/", zh:"歷史"},{en:"hour", ipa:"/ˈaʊər/", zh:"小時"},{en:"hate", ipa:"/heɪt/", zh:"討厭"},{en:"hole", ipa:"/hoʊl/", zh:"孔洞"},{en:"hurry", ipa:"/ˈhɜri/", zh:"趕快"},{en:"hear", ipa:"/hɪr/", zh:"聽到"},{en:"hope", ipa:"/hoʊp/", zh:"希望"},{en:"husband", ipa:"/ˈhʌzbənd/", zh:"老公"},
+        {en:"if", ipa:"/ɪf/", zh:"如果"},{en:"information", ipa:"/ˌɪnfərˈmeɪʃən/", zh:"消息"},{en:"instrument", ipa:"/ˈɪnstrəmənt/", zh:"樂器"},{en:"important", ipa:"/ɪmˈpɔrtənt/", zh:"重要的"},{en:"insect", ipa:"/ˈɪnsɛkt/", zh:"昆蟲"},{en:"interesting", ipa:"/ˈɪntrəstɪŋ/", zh:"有趣的"},{en:"improve", ipa:"/ɪmˈpruv/", zh:"改善"},{en:"instead", ipa:"/ɪnˈstɛd/", zh:"反而"},{en:"invitation", ipa:"/ˌɪnvɪˈteɪʃən/", zh:"邀請"},
+        {en:"jam", ipa:"/dʒæm/", zh:"果醬"},{en:"join", ipa:"/dʒɔɪn/", zh:"加入"},{en:"July", ipa:"/dʒuˈlaɪ/", zh:"七月"},{en:"January", ipa:"/ˈdʒænjuˌɛri/", zh:"一月"},{en:"journalist", ipa:"/ˈdʒɜrnəlɪst/", zh:"記者"},{en:"June", ipa:"/dʒun/", zh:"六月"},{en:"job", ipa:"/dʒɑb/", zh:"工作"},{en:"journey", ipa:"/ˈdʒɜrni/", zh:"旅程"},{en:"just", ipa:"/dʒʌst/", zh:"只是"},
+        {en:"keep", ipa:"/kip/", zh:"保持"},{en:"kind", ipa:"/kaɪnd/", zh:"友善的"},{en:"knee", ipa:"/ni/", zh:"膝蓋"},{en:"key", ipa:"/ki/", zh:"鑰匙"},{en:"king", ipa:"/kɪŋ/", zh:"國王"},{en:"knife", ipa:"/naɪf/", zh:"刀子"},
+        {en:"land", ipa:"/lænd/", zh:"降落"},{en:"leave", ipa:"/liv/", zh:"離開"},{en:"lift", ipa:"/lɪft/", zh:"舉"},{en:"language", ipa:"/ˈlæŋɡwɪdʒ/", zh:"語言"},{en:"left", ipa:"/lɛft/", zh:"左邊"},{en:"light", ipa:"/laɪt/", zh:"燈光"},{en:"large", ipa:"/lɑrdʒ/", zh:"大的"},{en:"let", ipa:"/lɛt/", zh:"讓"},{en:"lovely", ipa:"/ˈlʌvli/", zh:"可愛的"},{en:"later", ipa:"/ˈleɪtər/", zh:"之後"},{en:"letter", ipa:"/ˈlɛtər/", zh:"信"},{en:"low", ipa:"/loʊ/", zh:"低"},{en:"lazy", ipa:"/ˈleɪzi/", zh:"懶惰的"},{en:"lie", ipa:"/laɪ/", zh:"說謊"},{en:"lucky", ipa:"/ˈlʌki/", zh:"幸運的"},
+        {en:"magazine", ipa:"/ˈmæɡəˌzin/", zh:"雜誌"},{en:"meal", ipa:"/mil/", zh:"餐"},{en:"million", ipa:"/ˈmɪljən/", zh:"百萬"},{en:"manager", ipa:"/ˈmænədʒər/", zh:"主管"},{en:"medicine", ipa:"/ˈmɛdəsən/", zh:"藥"},{en:"mind", ipa:"/maɪnd/", zh:"在意"},{en:"March", ipa:"/mɑrtʃ/", zh:"三月"},{en:"meeting", ipa:"/ˈmitɪŋ/", zh:"會議"},{en:"minute", ipa:"/ˈmɪnɪt/", zh:"分鐘"},{en:"married", ipa:"/ˈmærid/", zh:"已婚的"},{en:"member", ipa:"/ˈmɛmbər/", zh:"會員"},{en:"missing", ipa:"/ˈmɪsɪŋ/", zh:"想念的"},{en:"math", ipa:"/mæθ/", zh:"數學"},{en:"metal", ipa:"/ˈmɛtəl/", zh:"金屬"},{en:"month", ipa:"/mʌnθ/", zh:"月份"},{en:"May", ipa:"/meɪ/", zh:"五月"},{en:"middle", ipa:"/ˈmɪdəl/", zh:"中間的"},{en:"museum", ipa:"/mjuˈziəm/", zh:"博物館"},
+        {en:"necklace", ipa:"/ˈnɛkləs/", zh:"項鍊"},{en:"next", ipa:"/nɛkst/", zh:"下一個"},{en:"north", ipa:"/nɔrθ/", zh:"北方"},{en:"newspaper", ipa:"/ˈnuzˌpeɪpər/", zh:"報紙"},{en:"noisy", ipa:"/ˈnɔɪzi/", zh:"吵鬧的"},{en:"November", ipa:"/noʊˈvɛmbər/", zh:"十一月"},
+        {en:"ocean", ipa:"/ˈoʊʃən/", zh:"海洋"},{en:"office", ipa:"/ˈɔfɪs/", zh:"辦公室"},{en:"other", ipa:"/ˈʌðər/", zh:"其他的"},{en:"October", ipa:"/ɑkˈtoʊbər/", zh:"十月"},{en:"once", ipa:"/wʌns/", zh:"一次"},{en:"oven", ipa:"/ˈʌvən/", zh:"烤箱"},{en:"of course", ipa:"/əv kɔrs/", zh:"當然"},{en:"online", ipa:"/ˈɑnˌlaɪn/", zh:"線上"},{en:"over", ipa:"/ˈoʊvər/", zh:"過度"},
+        {en:"passenger", ipa:"/ˈpæsəndʒər/", zh:"旅客"},{en:"pilot", ipa:"/ˈpaɪlət/", zh:"機長"},{en:"prepare", ipa:"/prɪˈpɛr/", zh:"準備"},{en:"past", ipa:"/pæst/", zh:"過去"},{en:"planet", ipa:"/ˈplænɪt/", zh:"行星"},{en:"prize", ipa:"/praɪz/", zh:"獎賞"},{en:"path", ipa:"/pæθ/", zh:"路徑"},{en:"platform", ipa:"/ˈplætˌfɔrm/", zh:"平台"},{en:"problem", ipa:"/ˈprɑbləm/", zh:"問題"},{en:"pepper", ipa:"/ˈpɛpər/", zh:"胡椒"},{en:"pocket", ipa:"/ˈpɑkɪt/", zh:"口袋"},{en:"project", ipa:"/ˈprɑdʒɛkt/", zh:"計畫"},{en:"perhaps", ipa:"/pərˈhæps/", zh:"也許"},{en:"poor", ipa:"/pʊr/", zh:"窮的"},{en:"puzzle", ipa:"/ˈpʌzəl/", zh:"難題"},{en:"piece", ipa:"/pis/", zh:"一片"},{en:"popular", ipa:"/ˈpɑpjələr/", zh:"受歡迎的"},{en:"pyramid", ipa:"/ˈpɪrəˌmɪd/", zh:"金字塔"},
+        {en:"quarter", ipa:"/ˈkwɔrtər/", zh:"四分之一"},{en:"quite", ipa:"/kwaɪt/", zh:"相當"},{en:"quiz", ipa:"/kwɪz/", zh:"測驗"},
+        {en:"race", ipa:"/reɪs/", zh:"比賽"},{en:"remember", ipa:"/rɪˈmɛmbər/", zh:"記得"},{en:"restaurant", ipa:"/ˈrɛstəˌrɑnt/", zh:"餐廳"},{en:"railway", ipa:"/ˈreɪlˌweɪ/", zh:"鐵路"},{en:"repair", ipa:"/rɪˈpɛr/", zh:"修理"},{en:"right", ipa:"/raɪt/", zh:"右邊"},{en:"ready", ipa:"/ˈrɛdi/", zh:"準備好"},{en:"repeat", ipa:"/rɪˈpit/", zh:"重複"},{en:"rocket", ipa:"/ˈrɑkɪt/", zh:"火箭"},
+        {en:"salt", ipa:"/sɔlt/", zh:"鹽巴"},{en:"singer", ipa:"/ˈsɪŋər/", zh:"歌手"},{en:"spend", ipa:"/spɛnd/", zh:"花費"},{en:"save", ipa:"/seɪv/", zh:"保存"},{en:"skyscraper", ipa:"/ˈskaɪˌskreɪpər/", zh:"摩天大樓"},{en:"spot", ipa:"/spɑt/", zh:"地點"},{en:"score", ipa:"/skɔr/", zh:"分數"},{en:"smell", ipa:"/smɛl/", zh:"聞"},{en:"spring", ipa:"/sprɪŋ/", zh:"春天"},{en:"screen", ipa:"/skrin/", zh:"螢幕"},{en:"snack", ipa:"/snæk/", zh:"零食"},{en:"stadium", ipa:"/ˈsteɪdi|m/", zh:"體育館"},{en:"search", ipa:"/sɜrtʃ/", zh:"尋找"},{en:"so", ipa:"/soʊ/", zh:"所以"},{en:"stage", ipa:"/steɪdʒ/", zh:"舞台"},{en:"secret", ipa:"/ˈsikrɪt/", zh:"秘密"},{en:"somewhere", ipa:"/ˈsʌmˌwɛr/", zh:"某個地方"},{en:"stay", ipa:"/steɪ/", zh:"待"},{en:"September", ipa:"/sɛpˈtɛmbər/", zh:"九月"},{en:"soon", ipa:"/sun/", zh:"不久"},{en:"still", ipa:"/stɪl/", zh:"仍然"},{en:"several", ipa:"/ˈsɛvərəl/", zh:"好幾個"},{en:"sound", ipa:"/saʊnd/", zh:"聲音"},{en:"strange", ipa:"/streɪndʒ/", zh:"奇怪"},{en:"shelf", ipa:"/ʃɛlf/", zh:"書架"},{en:"south", ipa:"/saʊθ/", zh:"南方"},{en:"suddenly", ipa:"/ˈsʌdənli/", zh:"突然"},{en:"should", ipa:"/ʃʊd/", zh:"應該"},{en:"space", ipa:"/speɪs/", zh:"空間"},{en:"summer", ipa:"/ˈsʌmər/", zh:"夏天"},{en:"silver", ipa:"/ˈsɪlvər/", zh:"銀色"},{en:"speak", ipa:"/spik/", zh:"說"},{en:"surprise", ipa:"/sərˈpraɪz/", zh:"驚喜"},{en:"since", ipa:"/sɪns/", zh:"自從"},{en:"special", ipa:"/ˈspɛʃəl/", zh:"特別的"},{en:"swing", ipa:"/swɪŋ/", zh:"擺動"},
+        {en:"taste", ipa:"/teɪst/", zh:"味道"},{en:"thousand", ipa:"/ˈθaʊzənd/", zh:"千"},{en:"tomorrow", ipa:"/təˈmɔroʊ/", zh:"明天"},{en:"team", ipa:"/tim/", zh:"隊伍"},{en:"through", ipa:"/θru/", zh:"通過"},{en:"tour", ipa:"/tʊr/", zh:"旅行"},{en:"tent", ipa:"/tɛnt/", zh:"帳篷"},{en:"timetable", ipa:"/ˈtaɪmˌteɪbəl/", zh:"時刻表"},{en:"traffic", ipa:"/ˈtræfɪk/", zh:"交通"},{en:"theater", ipa:"/ˈθiətər/", zh:"戲院"},{en:"together", ipa:"/təˈɡɛðər/", zh:"一起"},{en:"twice", ipa:"/twaɪs/", zh:"兩次"},
+        {en:"unhappy", ipa:"/ʌnˈhæpi/", zh:"不開心"},{en:"university", ipa:"/ˌjunəˈvɜrsəti/", zh:"大學"},{en:"use", ipa:"/juz/", zh:"用"},{en:"uniform", ipa:"/ˈjunəˌfɔrm/", zh:"制服"},{en:"until", ipa:"/ʌnˈtɪl/", zh:"直到"},{en:"usually", ipa:"/ˈjuʒuəli/", zh:"通常"},
+        {en:"view", ipa:"/vju/", zh:"景色"},{en:"violin", ipa:"/ˌvaɪəˈlɪn/", zh:"小提琴"},{en:"visit", ipa:"/ˈvɪzɪt/", zh:"拜訪"},
+        {en:"waiter", ipa:"/ˈweɪtər/", zh:"服務生"},{en:"wife", ipa:"/waɪf/", zh:"老婆"},{en:"wish", ipa:"/wɪʃ/", zh:"希望"},{en:"warm", ipa:"/wɔrm/", zh:"溫暖的"},{en:"wild", ipa:"/waɪld/", zh:"野外的"},{en:"without", ipa:"/wɪˈðaʊt/", zh:"沒有"},{en:"west", ipa:"/wɛst/", zh:"西方"},{en:"will", ipa:"/wɪl/", zh:"將會"},{en:"wonderful", ipa:"/ˈwʌndərfəl/", zh:"美妙的"},{en:"wheel", ipa:"/wil/", zh:"輪胎"},{en:"winner", ipa:"/ˈwɪnər/", zh:"冠軍"},{en:"wood", ipa:"/wʊd/", zh:"木頭"},{en:"while", ipa:"/waɪl/", zh:"當"},{en:"winter", ipa:"/ˈwɪntər/", zh:"冬天"},{en:"worried", ipa:"/ˈwɜrid/", zh:"擔心的"},
+        {en:"x-ray", ipa:"/ˈɛksˌreɪ/", zh:"x光"},{en:"yet", ipa:"/jɛt/", zh:"但是"},{en:"zero", ipa:"/ˈzɪroʊ/", zh:"零"}
     ];
 
     let state = { name:"", mode:"", sub:"", quiz:[], cur:0, results:[], start:0 };
 
+    /* --- 核心切換邏輯 --- */
+    function openStudyMode() {
+        document.getElementById('start-page').classList.add('hidden');
+        document.getElementById('study-mode').classList.remove('hidden');
+        const btnBox = document.getElementById('study-letter-btns');
+        btnBox.innerHTML = '';
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(l => {
+            const b = document.createElement('button'); b.innerText = l;
+            b.onclick = () => renderStudyList(l);
+            btnBox.appendChild(b);
+        });
+        renderStudyList('A');
+    }
+
+    function closeStudyMode() {
+        document.getElementById('study-mode').classList.add('hidden');
+        document.getElementById('start-page').classList.remove('hidden');
+    }
+
     function handleLogin() {
-        const val = document.getElementById('username-input').value.trim();
-        if(!val) return alert("請輸入姓名");
-        state.name = val;
-        document.getElementById('display-user').innerText = val;
-        document.getElementById('login-page').classList.add('hidden');
-        document.getElementById('main-menu').classList.remove('hidden');
+        const v = document.getElementById('username-input').value.trim();
+        if(!v) return alert("請輸入姓名後再挑戰！");
+        state.name = v;
+        document.getElementById('display-user').innerText = v;
+        document.getElementById('start-page').classList.add('hidden');
+        document.getElementById('test-menu').classList.remove('hidden');
+    }
+
+    /* --- 原有功能維持 --- */
+    function renderStudyList(l) {
+        const list = allWords.filter(w => w.en[0].toUpperCase() === l);
+        const box = document.getElementById('study-list-content');
+        box.innerHTML = list.length ? '' : `<p style="text-align:center; color:#888;">該字母目前無單字</p>`;
+        list.forEach(w => {
+            box.innerHTML += `<div class="study-item">
+                <div class="word-info">
+                    <b>${w.en}</b> <span class="ipa">${w.ipa}</span>
+                    <span class="zh-text">${w.zh}</span>
+                </div>
+                <button onclick="speakText('${w.en}')">🔊</button>
+            </div>`;
+        });
+    }
+
+    function speakText(txt) {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(txt);
+        m.rate = 0.7; m.lang = 'en-US';
+        window.speechSynthesis.speak(m);
     }
 
     function showSubMenu(m) {
         state.mode = m;
-        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('test-menu').classList.add('hidden');
         document.getElementById('sub-menu').classList.remove('hidden');
-        const btns = document.getElementById('sub-buttons');
-        const lZone = document.getElementById('letter-zone');
-        btns.innerHTML = `<button onclick="setup('dict-AM')">大區 A~M</button><button onclick="setup('dict-NZ')">大區 N~Z</button>`;
-        lZone.classList.remove('hidden');
+        document.getElementById('sub-buttons').innerHTML = `<button onclick="setup('dict-AM')">大區 A ~ M</button><button onclick="setup('dict-NZ')">大區 N ~ Z</button>`;
+        document.getElementById('letter-zone').classList.remove('hidden');
         const lBtns = document.getElementById('letter-buttons'); lBtns.innerHTML = '';
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(l => {
             const b = document.createElement('button'); b.innerText = l;
@@ -157,17 +225,16 @@
     }
 
     function setup(sub) {
-        state.sub = sub;
-        let pool = [...allWords];
+        let pool = [];
         if(sub.startsWith('letter-')) {
             const char = sub.split('-')[1];
             pool = allWords.filter(w => w.en[0].toUpperCase() === char);
         } else {
-            const range = sub.split('-')[1];
-            pool = allWords.filter(w => range==='AM' ? w.en[0].toUpperCase()<='M' : w.en[0].toUpperCase()>='N');
+            const r = sub.split('-')[1];
+            pool = allWords.filter(w => r==='AM' ? w.en[0].toUpperCase()<='M' : w.en[0].toUpperCase()>='N');
         }
-        if(!pool.length) return alert("範圍內無單字");
-        let count = sub.includes('letter') ? Math.min(15, Math.ceil(pool.length/2)) : 15;
+        if(!pool.length) return alert("此範圍尚無單字");
+        let count = sub.includes('letter') ? Math.min(15, Math.max(1, Math.ceil(pool.length/2))) : 15;
         state.quiz = pool.sort(()=>Math.random()-0.5).slice(0, count);
         state.cur = 0; state.results = []; state.start = Date.now();
         document.getElementById('sub-menu').classList.add('hidden');
@@ -181,31 +248,22 @@
         document.getElementById('feedback').innerText = '';
         document.getElementById('submit-btn').classList.remove('hidden');
         document.getElementById('next-btn').classList.add('hidden');
-        const qBox = document.getElementById('q-content');
+        const rb = document.getElementById('replay-btn');
         const cA = document.getElementById('choice-area');
         const sA = document.getElementById('spell-area');
-        const rb = document.getElementById('replay-btn');
         cA.classList.add('hidden'); sA.classList.add('hidden'); rb.classList.add('hidden');
 
         if(state.mode.includes('choice')) {
-            qBox.innerText = (state.mode==='listen-choice') ? '👂 聽音辨義' : q.en;
-            if(state.mode==='listen-choice') { rb.classList.remove('hidden'); play(); }
-            makeChoices();
-            cA.classList.remove('hidden');
+            document.getElementById('q-content').innerText = (state.mode==='listen-choice') ? '👂 聽音辨義' : q.en;
+            if(state.mode==='listen-choice') { rb.classList.remove('hidden'); speakText(q.en); }
+            makeChoices(); cA.classList.remove('hidden');
         } else {
-            qBox.innerText = (state.mode==='dictation') ? '👂 聽音拼字' : q.zh;
-            if(state.mode==='dictation') { rb.classList.remove('hidden'); play(); }
+            document.getElementById('q-content').innerText = (state.mode==='dictation') ? '👂 聽音拼字' : q.zh;
+            if(state.mode==='dictation') { rb.classList.remove('hidden'); speakText(q.en); }
             sA.classList.remove('hidden');
             document.getElementById('spell-input').value = '';
             setTimeout(()=>document.getElementById('spell-input').focus(), 300);
         }
-    }
-
-    function play() {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(state.quiz[state.cur].en);
-        msg.rate = 0.7; msg.lang = 'en-US';
-        window.speechSynthesis.speak(msg);
     }
 
     function makeChoices() {
@@ -228,19 +286,18 @@
 
     function processSubmit() {
         const q = state.quiz[state.cur];
-        let userAns = "";
-        let ok = false;
+        let userAns = "", ok = false;
         if(state.mode.includes('choice')) {
             const s = document.querySelector('.option-item.selected');
-            if(!s) return;
+            if(!s) return alert("請選擇一個答案");
             userAns = s.innerText; ok = (userAns === q.zh);
         } else {
             userAns = document.getElementById('spell-input').value.trim();
             ok = (userAns.toLowerCase() === q.en.toLowerCase());
         }
-        state.results.push({ en: q.en, zh: q.zh, user: userAns, ok: ok });
+        state.results.push({ en: q.en, zh: q.zh, ok: ok });
         const f = document.getElementById('feedback');
-        f.innerText = ok ? "⭕ 正確" : `❌ 錯誤 (答案: ${q.en})`;
+        f.innerText = ok ? "⭕ 正確！" : `❌ 錯誤 (正解: ${q.en})`;
         f.className = ok ? "status-ok" : "status-no";
         document.getElementById('submit-btn').classList.add('hidden');
         document.getElementById('next-btn').classList.remove('hidden');
@@ -249,29 +306,20 @@
     function goNext() {
         state.cur++;
         if(state.cur < state.quiz.length) render();
-        else finish();
+        else finishGame();
     }
 
-    function finish() {
+    function finishGame() {
         const sec = Math.round((Date.now() - state.start)/1000);
         const score = Math.round((state.results.filter(r=>r.ok).length / state.quiz.length)*100);
-        
-        // 排行榜更新
-        let rs = JSON.parse(localStorage.getItem('NW_RANK_V2')) || { choice:[], 'listen-choice':[], spell:[], dictation:[] };
-        rs[state.mode].push({ name: state.name, score, time: sec });
-        rs[state.mode].sort((a,b) => b.score - a.score || a.time - b.time);
-        localStorage.setItem('NW_RANK_V2', JSON.stringify(rs));
+        let rks = JSON.parse(localStorage.getItem('NW_V5')) || { choice:[], 'listen-choice':[], spell:[], dictation:[] };
+        rks[state.mode].push({ name: state.name, score, time: sec });
+        rks[state.mode].sort((a,b) => b.score - a.score || a.time - b.time);
+        localStorage.setItem('NW_V5', JSON.stringify(rks));
 
-        // 送出表單
-        const p = new URLSearchParams();
-        p.append(GOOGLE_CONFIG.entryName, state.name); p.append(GOOGLE_CONFIG.entryScore, score);
-        p.append(GOOGLE_CONFIG.entryTime, sec); p.append(GOOGLE_CONFIG.entryMode, state.mode);
-        fetch(GOOGLE_CONFIG.url, { method: "POST", mode: "no-cors", body: p });
-
-        // 顯示結果總覽
         document.getElementById('game-play').classList.add('hidden');
         document.getElementById('result-report').classList.remove('hidden');
-        document.getElementById('res-score').innerText = `得分：${score} | 用時：${sec}秒`;
+        document.getElementById('res-score').innerText = `結算：${score}分 | 用時：${sec}秒`;
         const rb = document.getElementById('report-body'); rb.innerHTML = '';
         state.results.forEach(r => {
             rb.innerHTML += `<tr><td>${r.en}</td><td>${r.zh}</td><td class="${r.ok?'status-ok':'status-no'}">${r.ok?'⭕':'❌'}</td></tr>`;
@@ -279,14 +327,14 @@
     }
 
     function updateRankUI(m, e) {
-        if(e) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); }
+        if(e) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); }
         const b = document.getElementById('rank-body'); b.innerHTML = '';
-        const data = (JSON.parse(localStorage.getItem('NW_RANK_V2')) || {})[m] || [];
-        if(!data.length) b.innerHTML = '<tr><td colspan="4">尚無數據</td></tr>';
+        const data = (JSON.parse(localStorage.getItem('NW_V5')) || {})[m] || [];
+        if(!data.length) b.innerHTML = '<tr><td colspan="4">尚無紀錄</td></tr>';
         else data.slice(0,5).forEach((r,i) => b.innerHTML += `<tr><td>${i+1}</td><td>${r.name}</td><td>${r.score}</td><td>${r.time}s</td></tr>`);
     }
 
-    function goBackMenu() { document.getElementById('sub-menu').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); }
+    function goBackMenu() { document.getElementById('sub-menu').classList.add('hidden'); document.getElementById('test-menu').classList.remove('hidden'); }
     window.onload = () => updateRankUI('choice');
 </script>
 </body>
